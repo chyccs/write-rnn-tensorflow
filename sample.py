@@ -82,7 +82,7 @@ def freeze_and_save_graph(sess, folder, out_nodes, as_text=False):
         sess, graph_raw, out_nodes)
     ext = '.txt' if as_text else '.pb'
     #tf.train.write_graph(graph_raw, folder, 'graph_raw'+ext, as_text=as_text)
-    tf.train.write_graph(graph_frz, folder, 'graph_frz' + ext, as_text=as_text)
+    tf.train.write_graph(graph_frz, folder, f'graph_frz{ext}', as_text=as_text)
 
 
 if(sample_args.freeze_graph):
