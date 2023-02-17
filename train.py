@@ -104,7 +104,7 @@ def train(args):
                         sess,
                         checkpoint_path,
                         global_step=ith_train_step)
-                    print("model saved to {}".format(checkpoint_path))
+                    print(f"model saved to {checkpoint_path}")
 
 
 if __name__ == '__main__':

@@ -210,7 +210,7 @@ class Model():
         def get_pi_idx(x, pdf):
             N = pdf.size
             accumulate = 0
-            for i in range(0, N):
+            for i in range(N):
                 accumulate += pdf[i]
                 if (accumulate >= x):
                     return i

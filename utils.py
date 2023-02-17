@@ -43,7 +43,7 @@ def draw_strokes(data, factor=10, svg_filename='sample.svg'):
 
     abs_x = 25 - min_x
     abs_y = 25 - min_y
-    p = "M%s,%s " % (abs_x, abs_y)
+    p = f"M{abs_x},{abs_y} "
 
     command = "m"
 
@@ -96,10 +96,7 @@ def draw_strokes_random_color(
         for i in range(len(stroke)):
             if switch_color == False and i > 0:
                 c_data[i] = c_data[i - 1]
-            if stroke[i, 2] < 1:  # same strike
-                switch_color = False
-            else:
-                switch_color = True
+            switch_color = stroke[i, 2] >= 1
     draw_strokes_custom_color(
         stroke,
         factor=factor,
@@ -136,18 +133,16 @@ def draw_strokes_custom_color(
         abs_y += y
 
         if (lift_pen == 1):
-            p = "M " + str(abs_x) + "," + str(abs_y) + " "
+            p = f"M {str(abs_x)},{str(abs_y)} "
         else:
-            p = "M +" + str(prev_x) + "," + str(prev_y) + \
-                " L " + str(abs_x) + "," + str(abs_y) + " "
+            p = f"M +{str(prev_x)},{str(prev_y)} L {str(abs_x)},{str(abs_y)} "
 
         lift_pen = data[i, 2]
 
         the_color = "black"
 
         if (color_data is not None):
-            the_color = "rgb(" + str(int(color_data[i, 0])) + "," + str(
-                int(color_data[i, 1])) + "," + str(int(color_data[i, 2])) + ")"
+            the_color = f"rgb({int(color_data[i, 0])},{int(color_data[i, 1])},{int(color_data[i, 2])})"
 
         dwg.add(dwg.path(p).stroke(the_color, stroke_width).fill(the_color))
     dwg.save()
@@ -208,7 +203,7 @@ class DataLoader():
         self.limit = limit  # removes large noisy gaps in the data
 
         data_file = os.path.join(self.data_dir, "strokes_training_data.cpkl")
-        raw_data_dir = self.data_dir + "/lineStrokes"
+        raw_data_dir = f"{self.data_dir}/lineStrokes"
 
         if not (os.path.exists(data_file)):
             print("creating training data pkl file from raw source")
@@ -228,7 +223,7 @@ class DataLoader():
             #print('Found directory: %s' % dirName)
             for fname in fileList:
                 #print('\t%s' % fname)
-                filelist.append(dirName + "/" + fname)
+                filelist.append(f"{dirName}/{fname}")
 
         # function to read each individual xml file
         def getStrokes(filename):
@@ -285,21 +280,18 @@ class DataLoader():
         strokes = []
         for i in range(len(filelist)):
             if (filelist[i][-3:] == 'xml'):
-                print('processing ' + filelist[i])
+                print(f'processing {filelist[i]}')
                 strokes.append(
                     convert_stroke_to_array(
                         getStrokes(
                             filelist[i])))
 
-        f = open(data_file, "wb")
-        pickle.dump(strokes, f, protocol=2)
-        f.close()
+        with open(data_file, "wb") as f:
+            pickle.dump(strokes, f, protocol=2)
 
     def load_preprocessed(self, data_file):
-        f = open(data_file, "rb")
-        self.raw_data = pickle.load(f)
-        f.close()
-
+        with open(data_file, "rb") as f:
+            self.raw_data = pickle.load(f)
         # goes thru the list, and only keeps the text entries that have more
         # than seq_length points
         self.data = []
@@ -323,8 +315,7 @@ class DataLoader():
                     # number of equiv batches this datapoint is worth
                     counter += int(len(data) / ((self.seq_length + 2)))
 
-        print("train data: {}, valid data: {}".format(
-            len(self.data), len(self.valid_data)))
+        print(f"train data: {len(self.data)}, valid data: {len(self.valid_data)}")
         # minus 1, since we want the ydata to be a shifted version of x data
         self.num_batches = int(counter / self.batch_size)
 
@@ -332,9 +323,9 @@ class DataLoader():
         # returns validation data
         x_batch = []
         y_batch = []
+        idx = 0
         for i in range(self.batch_size):
             data = self.valid_data[i % len(self.valid_data)]
-            idx = 0
             x_batch.append(np.copy(data[idx:idx + self.seq_length]))
             y_batch.append(np.copy(data[idx + 1:idx + self.seq_length + 1]))
         return x_batch, y_batch
@@ -343,7 +334,7 @@ class DataLoader():
         # returns a randomised, seq_length sized portion of the training data
         x_batch = []
         y_batch = []
-        for i in range(self.batch_size):
+        for _ in range(self.batch_size):
             data = self.data[self.pointer]
             # number of equiv batches this datapoint is worth
             n_batch = int(len(data) / ((self.seq_length + 2)))
